@@ -13,6 +13,7 @@ use App\Support\Site\Faq;
 use App\Support\Site\Legal;
 use App\Support\Site\LegalDefaults;
 use App\Support\Site\PlatformConfig;
+use App\Support\Site\Social;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -76,6 +77,31 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('admin.settings.index', ['tab' => 'pay'])->with('success', 'Sozlamalar saqlandi');
+    }
+
+    /** Footerdagi Telegram / Instagram / YouTube havolalari. */
+    public function social(Request $request)
+    {
+        $request->validate(['social_telegram' => 'nullable|string|max:200', 'social_instagram' => 'nullable|string|max:200', 'social_youtube' => 'nullable|string|max:200']);
+        $clean = [];
+        $errors = [];
+        foreach (array_keys(Social::NETWORKS) as $net) {
+            $url = Social::normalize($net, $request->input('social_'.$net));
+            if ($url === null) {
+                $errors['social_'.$net] = __("Havola noto'g'ri. @nom yoki :label havolasini kiriting", ['label' => Social::NETWORKS[$net]['label']]);
+            } else {
+                $clean[$net] = $url;
+            }
+        }
+        if ($errors) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
+        foreach ($clean as $net => $url) {
+            PlatformSetting::put('social.'.$net, $url === '' ? null : $url);
+        }
+        \App\Models\AuditLog::record('platform.social_updated', null, $clean);
+
+        return redirect()->route('admin.settings.index', ['tab' => 'pay'])->with('success', 'Ijtimoiy tarmoqlar saqlandi');
     }
 
     /** Payme va Eskiz kalitlari: bazada shifrlangan. Bo'sh qoldirilgan maxfiy maydon eski qiymatni saqlab qoladi. */

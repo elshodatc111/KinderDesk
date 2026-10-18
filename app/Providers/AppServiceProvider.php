@@ -46,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
         RateLimiter::for('login', fn (Request $r) => Limit::perMinute(8)->by($r->ip().'|'.$r->input('phone')));
         RateLimiter::for('public-lead', fn (Request $r) => Limit::perMinute(6)->by($r->ip()));
+        RateLimiter::for('post-comment', fn (Request $r) => [Limit::perMinute(3)->by($r->ip()), Limit::perHour(15)->by($r->ip())]);
         RateLimiter::for('backup', fn (Request $r) => Limit::perMinute(20)->by($r->ip()));
         RateLimiter::for('webhooks', fn (Request $r) => Limit::perMinute(600)->by($r->ip()));
 

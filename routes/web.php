@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Route;
 
 /* ============ Ommaviy sahifalar ============ */
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/yangiliklar', [\App\Http\Controllers\Public\NewsController::class, 'index'])->name('news.index');
+Route::get('/yangiliklar/{slug}', [\App\Http\Controllers\Public\NewsController::class, 'show'])->name('news.show');
+Route::get('/yangiliklar/{slug}/muqova', [\App\Http\Controllers\Public\NewsController::class, 'cover'])->name('news.cover');
+Route::post('/yangiliklar/{slug}/izoh', [\App\Http\Controllers\Public\NewsController::class, 'comment'])->middleware('throttle:post-comment')->name('news.comment');
 Route::get('/huquqiy/{page}', [HomeController::class, 'legal'])->name('legal');
 Route::get('/til/{locale}', [HomeController::class, 'locale'])->name('locale');
 
@@ -150,6 +154,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'secure', 'super'])-
     Route::post('/sozlamalar/shablonlar/{template}/yuborish', [Admin\SettingsController::class, 'templateSubmit'])->name('settings.templates.submit');
     Route::post('/sozlamalar/shablonlar/{template}/sinov', [Admin\SettingsController::class, 'templateTest'])->name('settings.templates.test');
 
+    Route::put('/sozlamalar/tarmoqlar', [Admin\SettingsController::class, 'social'])->name('settings.social');
     Route::put('/sozlamalar/ulanishlar', [Admin\SettingsController::class, 'connections'])->name('settings.connections');
     Route::put('/sozlamalar/savollar', [Admin\SettingsController::class, 'faq'])->name('settings.faq');
     Route::put('/sozlamalar/huquqiy', [Admin\SettingsController::class, 'legal'])->name('settings.legal');
@@ -166,6 +171,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'secure', 'super'])-
     Route::get('/zaxira', [Admin\BackupController::class, 'index'])->name('backup.index');
     Route::put('/zaxira', [Admin\BackupController::class, 'update'])->name('backup.update');
     Route::post('/zaxira/yaratish', [Admin\BackupController::class, 'runNow'])->name('backup.run');
+    Route::get('/yangiliklar', [Admin\PostController::class, 'index'])->name('posts.index');
+    Route::get('/yangiliklar/yangi', [Admin\PostController::class, 'create'])->name('posts.create');
+    Route::post('/yangiliklar', [Admin\PostController::class, 'store'])->name('posts.store');
+    Route::get('/yangiliklar/izohlar', [Admin\PostCommentController::class, 'index'])->name('comments.index');
+    Route::post('/yangiliklar/izohlar/ommaviy', [Admin\PostCommentController::class, 'bulk'])->name('comments.bulk');
+    Route::post('/yangiliklar/izohlar/{comment}/tasdiqlash', [Admin\PostCommentController::class, 'approve'])->name('comments.approve');
+    Route::post('/yangiliklar/izohlar/{comment}/yashirish', [Admin\PostCommentController::class, 'hide'])->name('comments.hide');
+    Route::post('/yangiliklar/izohlar/{comment}/javob', [Admin\PostCommentController::class, 'reply'])->name('comments.reply');
+    Route::delete('/yangiliklar/izohlar/{comment}', [Admin\PostCommentController::class, 'destroy'])->name('comments.destroy');
+    Route::get('/yangiliklar/{post}/tahrirlash', [Admin\PostController::class, 'edit'])->name('posts.edit');
+    Route::put('/yangiliklar/{post}', [Admin\PostController::class, 'update'])->name('posts.update');
+    Route::delete('/yangiliklar/{post}', [Admin\PostController::class, 'destroy'])->name('posts.destroy');
+
     Route::get('/video', [Admin\VideoController::class, 'index'])->name('videos.index');
     Route::post('/video', [Admin\VideoController::class, 'store'])->name('videos.store');
     Route::put('/video/{video}', [Admin\VideoController::class, 'update'])->name('videos.update');

@@ -15,6 +15,7 @@
         ['Rozilik jurnali', 'admin.consents.index', 'admin.consents.*', 'report', 'sky'],
         ['Zaxira API', 'admin.backup.index', 'admin.backup.*', 'refresh', 'leaf'],
         ['Telegram', 'admin.telegram.index', 'admin.telegram.*', 'sms', 'teal'],
+        ['Yangiliklar', 'admin.posts.index', 'admin.posts.*|admin.comments.*', 'report', 'sky'],
         ["Video yo'riqnoma", 'admin.videos.index', 'admin.videos.*', 'sparkles', 'marigold'],
         ['Profil', 'admin.profile.index', 'admin.profile.*', 'user', 'berry'],
     ];
@@ -29,7 +30,7 @@
         <nav class="px-3 space-y-1 flex-1">
             @foreach ($items as [$label, $route, $match, $icon, $color])
                 <a href="{{ route($route) }}" style="{{ \App\Support\Navigation::colors($color) }}"
-                   class="nav-item {{ request()->routeIs($match) ? 'is-active' : '' }}">
+                   class="nav-item {{ request()->routeIs(...explode('|', $match)) ? 'is-active' : '' }}">
                     <span class="nav-block"><x-icon :name="$icon" /></span><span>{{ __($label) }}</span>
                 </a>
             @endforeach

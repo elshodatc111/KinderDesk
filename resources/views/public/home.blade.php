@@ -159,6 +159,19 @@
     <p class="text-sm font-medium text-ink-mute mt-6">To'lov Payme yoki karta orqali (chek yuborib). Summa to'liq bog'cha balansiga tushadi. Obuna o'zi yechilmaydi — tarifni o'zingiz tanlaysiz.</p>
 </section>
 
+{{-- ============ So'nggi yangiliklar ============ --}}
+@if (isset($latestPosts) && $latestPosts->count())
+<section id="yangiliklar" class="max-w-6xl mx-auto px-4 py-10 sm:py-14 scroll-mt-20">
+    <div class="flex items-end justify-between gap-4 mb-6">
+        <h2 class="font-display text-3xl font-semibold">So'nggi yangiliklar</h2>
+        <a href="{{ route('news.index') }}" class="text-sm font-semibold text-teal-700 hover:underline whitespace-nowrap">Hammasi</a>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        @foreach ($latestPosts as $post)@include('public.news._card', ['post' => $post])@endforeach
+    </div>
+</section>
+@endif
+
 {{-- ============ Savollar (super admin sozlamalaridan) ============ --}}
 @if (count($faq))
 <section id="savollar" class="max-w-3xl mx-auto px-4 py-10 sm:py-12 scroll-mt-20">

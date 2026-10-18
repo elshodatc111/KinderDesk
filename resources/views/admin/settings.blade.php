@@ -73,6 +73,19 @@
     <button class="btn btn-primary">Saqlash</button>
 </form>
 
+<form method="post" action="{{ route('admin.settings.social') }}" class="card card-pad space-y-4 max-w-3xl mt-6">@csrf @method('put')
+    <h2 class="section-title">Ijtimoiy tarmoqlar</h2>
+    <p class="help">Sayt pastki qismida (footer) ikonkalar sifatida ko'rinadi; bosilganda yangi oynada ochiladi. Bo'sh qoldirilgan tarmoq ko'rsatilmaydi.</p>
+    @foreach(\App\Support\Site\Social::NETWORKS as $net => $def)
+        <div>
+            <label class="label flex items-center gap-2"><x-icon :name="$net" class="size-4" /> {{ $def['label'] }}</label>
+            <input name="social_{{ $net }}" class="input @error('social_'.$net) is-invalid @enderror" value="{{ old('social_'.$net, $values['social.'.$net]) }}" placeholder="{{ $def['placeholder'] }}" maxlength="200" autocomplete="off">
+            @error('social_'.$net)<p class="text-sm font-medium text-danger mt-1">{{ $message }}</p>@enderror
+        </div>
+    @endforeach
+    <button class="btn btn-primary">Saqlash</button>
+</form>
+
 @elseif($tab === 'site')
 <div class="space-y-8" x-data="{ page: 'oferta' }">
 <section class="card card-pad space-y-4" x-data='{ rows: @json($faqRows) }'>

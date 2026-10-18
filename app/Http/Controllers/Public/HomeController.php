@@ -13,7 +13,16 @@ class HomeController extends Controller
         $editions = Edition::where('is_active', true)->orderBy('sort')
             ->with(['plans' => fn ($q) => $q->where('is_active', true)->orderBy('months')])->get();
 
+        // Migratsiya hali ishlamagan bo'lsa ham bosh sahifa ochilsin
+        try {
+            $latestPosts = \App\Models\Post::visible()->orderByDesc('is_pinned')->orderByDesc('published_at')->orderByDesc('id')
+                ->withCount(['comments as approved_count' => fn ($q) => $q->where('status', 'approved')])->limit(3)->get();
+        } catch (\Throwable) {
+            $latestPosts = collect();
+        }
+
         return view('public.home', [
+            'latestPosts' => $latestPosts,
             'editions' => $editions,
             'features' => config('kinderdesk.features'),
             'trialDays' => config('kinderdesk.trial_days'),

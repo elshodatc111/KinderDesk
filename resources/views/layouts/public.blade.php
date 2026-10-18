@@ -9,6 +9,7 @@
             <a href="{{ route('home') }}#imkoniyatlar" class="hover:text-teal-700">Imkoniyatlar</a>
             <a href="{{ route('home') }}#nashrlar" class="hover:text-teal-700">Nashrlar</a>
             <a href="{{ route('home') }}#narxlar" class="hover:text-teal-700">Narxlar</a>
+            <a href="{{ route('news.index') }}" class="hover:text-teal-700">Yangiliklar</a>
             <a href="{{ route('home') }}#savollar" class="hover:text-teal-700">Savollar</a>
         </nav>
         <div class="ml-auto flex items-center gap-2">
@@ -25,6 +26,7 @@
     <nav x-show="menu" x-cloak x-transition.opacity class="md:hidden border-t border-line bg-cloud px-4 py-3 grid gap-1 font-semibold text-sm" @click="menu = false">
         <a href="{{ route('home') }}#imkoniyatlar" class="py-2">{{ __('Imkoniyatlar') }}</a>
         <a href="{{ route('home') }}#nashrlar" class="py-2">{{ __('Nashrlar') }}</a>
+        <a href="{{ route('news.index') }}" class="py-2">{{ __('Yangiliklar') }}</a>
         <a href="{{ route('home') }}#savollar" class="py-2">{{ __('Savollar') }}</a>
         @guest<a href="{{ route('login') }}" class="py-2">{{ __('Kirish') }}</a>@endguest
     </nav>
@@ -37,9 +39,23 @@
 @endphp
 <footer class="mt-16 bg-ink text-white/80">
     <div class="max-w-6xl mx-auto px-4 py-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
-        <div><x-logo size="sm" class="[&_*]:!text-white" /><p class="mt-3 text-sm font-medium text-white/60 max-w-xs">Xususiy bog'chalar uchun yagona boshqaruv platformasi.</p></div>
+        <div><x-logo size="sm" class="[&_*]:!text-white" /><p class="mt-3 text-sm font-medium text-white/60 max-w-xs">Xususiy bog'chalar uchun yagona boshqaruv platformasi.</p>
+            @php
+                $social = \App\Support\Site\Social::links();
+                $socialHover = ['telegram' => 'hover:bg-teal-500', 'instagram' => 'hover:bg-marigold-500', 'youtube' => 'hover:bg-berry-500'];
+            @endphp
+            @if($social)
+                <div class="mt-5 flex items-center gap-2.5" role="list" aria-label="{{ __('Ijtimoiy tarmoqlar') }}">
+                    @foreach($social as $net => $s)
+                        <a role="listitem" href="{{ $s['url'] }}" target="_blank" rel="noopener noreferrer" title="{{ __($s['label']) }}" aria-label="{{ __($s['label']) }}"
+                           class="size-10 grid place-items-center rounded-full bg-white/10 text-white/80 transition-colors motion-reduce:transition-none hover:text-white {{ $socialHover[$net] ?? 'hover:bg-teal-500' }} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"><x-icon :name="$net" class="size-5" /></a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
         <div class="text-sm font-medium space-y-2">
             <p class="text-white font-semibold mb-1">{{ __('Hujjatlar') }}</p>
+            <a class="block hover:text-white" href="{{ route('news.index') }}">Yangiliklar</a>
             <a class="block hover:text-white" href="{{ route('legal', 'oferta') }}">Ommaviy oferta</a>
             <a class="block hover:text-white" href="{{ route('legal', 'privacy') }}">Maxfiylik siyosati</a>
             <a class="block hover:text-white" href="{{ route('legal', 'terms') }}">Foydalanish shartlari</a>
