@@ -1,11 +1,29 @@
 @extends('layouts.public')
 @section('title', $post->title())
+@section('meta_title', \Illuminate\Support\Str::limit($post->title(), 55, '…').' | KinderDesk')
+@section('description', $post->excerpt(160))
+@section('og_type', 'article')
+@if($post->image())@section('og_image', $post->image())@endif
+@unless($post->isVisible())@section('noindex', '1')@endunless
 @push('head')
-    <meta name="description" content="{{ $post->excerpt(160) }}">
-    <meta property="og:type" content="article">
-    <meta property="og:title" content="{{ $post->title() }}">
-    <meta property="og:description" content="{{ $post->excerpt(160) }}">
-    @if($post->image())<meta property="og:image" content="{{ $post->image() }}">@endif
+@php
+    $ldPost = array_filter([
+        '@context' => 'https://schema.org',
+        '@type' => 'BlogPosting',
+        'headline' => \Illuminate\Support\Str::limit($post->title(), 110, ''),
+        'description' => $post->excerpt(200),
+        'image' => $post->image() ? [$post->image()] : null,
+        'datePublished' => $post->published_at?->toIso8601String(),
+        'dateModified' => ($post->edited_at ?? $post->published_at)?->toIso8601String(),
+        'inLanguage' => app()->getLocale(),
+        'mainEntityOfPage' => \App\Support\Site\Seo::urlFor(app()->getLocale()),
+        'author' => ['@type' => 'Organization', 'name' => 'KinderDesk', 'url' => route('home')],
+        'publisher' => ['@id' => route('home').'#organization'],
+    ]);
+    $ldCrumbs = \App\Support\Site\Seo::breadcrumbs([['KinderDesk', route('home')], [__('Yangiliklar'), route('news.index')], [$post->title(), $post->url()]]);
+@endphp
+<script type="application/ld+json">{!! \App\Support\Site\Seo::json($ldPost) !!}</script>
+<script type="application/ld+json">{!! \App\Support\Site\Seo::json($ldCrumbs) !!}</script>
 @endpush
 @section('content')
 @php $isAdmin = (bool) auth()->user()?->is_super_admin; @endphp

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Route;
 
 /* ============ Ommaviy sahifalar ============ */
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/robots.txt', [\App\Http\Controllers\Public\SeoController::class, 'robots'])->name('seo.robots');
+Route::get('/sitemap.xml', [\App\Http\Controllers\Public\SeoController::class, 'sitemap'])->name('seo.sitemap');
 Route::get('/yangiliklar', [\App\Http\Controllers\Public\NewsController::class, 'index'])->name('news.index');
 Route::get('/yangiliklar/{slug}', [\App\Http\Controllers\Public\NewsController::class, 'show'])->name('news.show');
 Route::get('/yangiliklar/{slug}/muqova', [\App\Http\Controllers\Public\NewsController::class, 'cover'])->name('news.cover');

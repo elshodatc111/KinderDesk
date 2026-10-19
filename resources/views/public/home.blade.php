@@ -1,5 +1,36 @@
 @extends('layouts.public')
 @section('title', "Bog'changiz uchun yagona boshqaruv")
+@section('meta_title', __("Bog'cha boshqaruv dasturi — davomat va to'lovlar | KinderDesk"))
+@section('description', __("Xususiy bog'chalar uchun boshqaruv dasturi: bolalar davomati, to'lovlar, qarzdorlar, xodimlar ish haqi va ota-onalarga Telegram xabarlari. 14 kun bepul sinov."))
+@push('head')
+@php
+    $ld = [
+        '@context' => 'https://schema.org',
+        '@graph' => array_values(array_filter([
+            [
+                '@type' => 'SoftwareApplication',
+                'name' => 'KinderDesk',
+                'url' => route('home'),
+                'applicationCategory' => 'BusinessApplication',
+                'operatingSystem' => 'Web',
+                'inLanguage' => ['uz', 'ru'],
+                'description' => __("Xususiy bog'chalar uchun boshqaruv dasturi: bolalar davomati, to'lovlar, qarzdorlar, xodimlar ish haqi va ota-onalarga Telegram xabarlari. 14 kun bepul sinov."),
+                'image' => asset('og-uz.png'),
+                'publisher' => ['@id' => route('home').'#organization'],
+            ],
+            count($faq) ? [
+                '@type' => 'FAQPage',
+                'mainEntity' => array_map(fn ($r) => [
+                    '@type' => 'Question',
+                    'name' => \App\Support\Site\Faq::pick($r['q']),
+                    'acceptedAnswer' => ['@type' => 'Answer', 'text' => \App\Support\Site\Faq::pick($r['a'])],
+                ], $faq),
+            ] : null,
+        ])),
+    ];
+@endphp
+<script type="application/ld+json">{!! \App\Support\Site\Seo::json($ld) !!}</script>
+@endpush
 @section('content')
 
 {{-- ============ Hero: ilova oynasi ============ --}}
