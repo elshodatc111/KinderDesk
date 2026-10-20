@@ -55,12 +55,27 @@ class TelegramUpdates
         }
         $chat = (int) $m['chat']['id'];
         $text = trim((string) ($m['text'] ?? ''));
+        $otp = app(\App\Services\Auth\TelegramOtp::class);
+        // SMS kod kelmasa: Telegram orqali kod olish (start-havola va kontakt ulashish)
+        if (preg_match('~^/start\s+o_([A-Za-z0-9]+)$~', $text, $mm)) {
+            $otp->handleStart($bot, $mm[1], $chat, $m['from'] ?? []);
+
+            return;
+        }
+        if (isset($m['contact'])) {
+            $otp->handleContact($bot, $m);
+
+            return;
+        }
         if (preg_match('~^/start\s+u_([A-Za-z0-9_-]+)$~', $text, $mm)) {
             $user = $this->twoFactor->bindFromBot($mm[1], $chat, $m['from']['username'] ?? null);
             $bot->api()->send($chat, $user
                 ? "✅ Ulandi. Endi tizimga kirganda tasdiqlash kodi shu yerga keladi."
                 : "Havola eskirgan yoki noto'g'ri. Tizimdagi sahifadan yangi havola oling.");
 
+            return;
+        }
+        if ($otp->hint($bot, $chat)) {
             return;
         }
         $bot->api()->send($chat, "KinderDesk xavfsizlik boti. Ulash uchun tizimdagi «Xavfsizlik» sahifasidagi havoladan foydalaning.");

@@ -31,14 +31,15 @@
         <button class="btn btn-primary btn-lg btn-block">Kirish</button>
     </form>
 
-    <form method="post" action="{{ route('login.otp') }}" x-show="mode==='otp'" x-cloak class="space-y-4">@csrf
+    <form method="post" action="{{ route('login.otp') }}" x-show="mode==='otp'" x-cloak class="space-y-4" @tg-otp-sent="sent = true; wait = 0">@csrf
         <div><label class="label" for="p2">Telefon raqam</label>
             <input id="p2" name="phone" x-model="phone" inputmode="tel" placeholder="90 123 45 67" class="input" required></div>
         <button type="button" class="btn btn-block" @click="send()" :disabled="busy || wait>0">
             <span x-text="wait>0 ? 'Qayta yuborish: '+wait+' s' : 'Kod yuborish'"></span></button>
         <p class="help" x-show="msg" x-text="msg"></p>
         <p class="banner banner-info text-sm" x-show="dev" x-cloak>Sinov rejimi. Kod: <b x-text="dev"></b></p>
-        <div x-show="sent" x-cloak><label class="label" for="c1">SMS kod</label>
+        @include('auth.partials.tg-otp', ['purpose' => 'login'])
+        <div x-show="sent" x-cloak><label class="label" for="c1">SMS yoki Telegram kodi</label>
             <input id="c1" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" class="input text-center tracking-[.5em] text-xl font-semibold">
             @error('code')<p class="field-error">{{ $message }}</p>@enderror</div>
         <button class="btn btn-primary btn-lg btn-block" x-show="sent" x-cloak>Kirish</button>

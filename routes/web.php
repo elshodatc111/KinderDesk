@@ -27,6 +27,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/kirish/kod', [AuthController::class, 'loginOtpSend'])->middleware('throttle:otp')->name('login.otp.send');
     Route::post('/kirish/kod/tasdiq', [AuthController::class, 'loginOtp'])->middleware('throttle:login')->name('login.otp');
 
+    // SMS kelmasa: kodni Telegram (platforma boti) orqali olish
+    Route::post('/kod/telegram', [AuthController::class, 'telegramOtp'])->middleware('throttle:otp')->name('otp.telegram');
+    Route::get('/kod/telegram/holat', [AuthController::class, 'telegramOtpStatus'])->middleware('throttle:60,1')->name('otp.telegram.status');
+
     Route::get('/royxatdan-otish', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/royxatdan-otish/kod', [AuthController::class, 'registerOtp'])->middleware('throttle:otp')->name('register.otp');
     Route::post('/royxatdan-otish', [AuthController::class, 'register'])->middleware('throttle:login')->name('register.store');

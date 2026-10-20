@@ -2,7 +2,7 @@
 @section('title', "Bog'chani ro'yxatdan o'tkazing")
 @section('lead', config('kinderdesk.trial_days')." kun bepul. Karta kerak emas.")
 @section('content')
-<form method="post" action="{{ route('register.store') }}" class="space-y-6"
+<form method="post" action="{{ route('register.store') }}" class="space-y-6" @tg-otp-sent="sent = true; ok = true; msg = ''; wait = 0"
       x-data="{
         phone: @js(old('phone', '')), email: @js(old('email', '')), tax: @js(old('tax_id', '')),
         sent: {{ $errors->has('code') ? 'true' : 'false' }}, wait: 0, msg: '', ok: true, dev: '', busy: false,
@@ -60,6 +60,7 @@
         </div>
         <p class="text-sm font-medium" :class="ok ? 'text-ink-soft' : 'text-danger'" x-show="msg" x-text="msg"></p>
         <p class="banner banner-info text-sm" x-show="dev" x-cloak>Sinov rejimi. Kod: <b x-text="dev"></b></p>
+        @include('auth.partials.tg-otp', ['purpose' => 'register'])
         @error('code')<p class="field-error">{{ $message }}</p>@enderror
     </div>
 

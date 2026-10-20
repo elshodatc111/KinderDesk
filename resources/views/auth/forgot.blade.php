@@ -2,7 +2,7 @@
 @section('title', 'Parolni tiklash')
 @section('lead', "Telefon raqamingizga SMS kod yuboramiz")
 @section('content')
-<form method="post" action="{{ route('password.reset') }}" class="space-y-4" x-data="{
+<form method="post" action="{{ route('password.reset') }}" class="space-y-4" @tg-otp-sent="sent = true; wait = 0" x-data="{
     phone: '{{ old('phone') }}', sent: false, wait: 0, msg: '', dev: '', busy: false,
     async send() {
         this.busy = true;
@@ -17,8 +17,9 @@
     <button type="button" class="btn btn-block" @click="send()" :disabled="busy || wait>0"><span x-text="wait>0 ? 'Qayta yuborish: '+wait+' s' : 'Kod yuborish'"></span></button>
     <p class="help" x-show="msg" x-text="msg"></p>
     <p class="banner banner-info text-sm" x-show="dev" x-cloak>Sinov rejimi. Kod: <b x-text="dev"></b></p>
+    @include('auth.partials.tg-otp', ['purpose' => 'reset'])
     <div x-show="sent" x-cloak class="space-y-4">
-        <div><label class="label">SMS kod</label><input name="code" inputmode="numeric" maxlength="6" class="input text-center tracking-[.5em] text-xl font-semibold">
+        <div><label class="label">SMS yoki Telegram kodi</label><input name="code" inputmode="numeric" maxlength="6" class="input text-center tracking-[.5em] text-xl font-semibold">
             @error('code')<p class="field-error">{{ $message }}</p>@enderror</div>
         <div><label class="label">Yangi parol</label><input type="password" name="password" class="input" autocomplete="new-password">
             <p class="help">Kamida 8 belgi: harf va raqam</p>@error('password')<p class="field-error">{{ $message }}</p>@enderror</div>

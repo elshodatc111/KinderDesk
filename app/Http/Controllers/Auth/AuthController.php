@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Edition;
 use App\Models\User;
 use App\Services\Auth\OtpService;
+use App\Services\Auth\TelegramOtp;
+use App\Services\Telegram\TelegramPoller;
 use App\Services\Tenancy\TenantProvisioner;
 use App\Services\Tenancy\TrialAlreadyUsed;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +17,7 @@ use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
-    public function __construct(private OtpService $otp, private TenantProvisioner $provisioner)
+    public function __construct(private OtpService $otp, private TenantProvisioner $provisioner, private TelegramOtp $tgOtp)
     {
     }
 
@@ -110,18 +112,63 @@ class AuthController extends Controller
             'tax_id' => 'nullable|string|max:20',
         ]);
         $phone = normalize_phone($data['phone']);
+        if ($fail = $this->registerPrecheck($phone, $data['email'] ?? null, $data['tax_id'] ?? null)) {
+            return $fail;
+        }
+
+        return response()->json($this->otp->send($phone, 'register', $request->ip()));
+    }
+
+    /** Ro'yxatdan o'tish uchun kod so'raldanda umumiy tekshiruvlar (SMS va Telegram). */
+    private function registerPrecheck(?string $phone, ?string $email, ?string $taxId): ?JsonResponse
+    {
         if (! $phone) {
             return response()->json(['ok' => false, 'message' => "Telefon raqam noto'g'ri. Format: 90 123 45 67"], 422);
         }
         if (User::where('phone', $phone)->exists()) {
             return response()->json(['ok' => false, 'message' => "Bu raqam ro'yxatdan o'tgan. Kirish sahifasidan foydalaning."], 422);
         }
-        // SMS xarajatini tejash uchun: sinovdan foydalangan bo'lsa kod yubormaymiz
-        if ($used = $this->provisioner->trialUsedBefore($phone, $data['email'] ?? null, $data['tax_id'] ?? null)) {
+        // Xarajatni tejash uchun: sinovdan foydalangan bo'lsa kod yubormaymiz
+        if ($used = $this->provisioner->trialUsedBefore($phone, $email, $taxId)) {
             return response()->json(['ok' => false, 'message' => __('Bu :used bilan sinov muddatidan avval foydalanilgan. Obuna xarid qilish uchun mavjud hisobingizga kiring.', ['used' => __($used)])], 422);
         }
 
-        return response()->json($this->otp->send($phone, 'register', $request->ip()));
+        return null;
+    }
+
+    /* ---------- Telegram orqali kod (SMS kelmasa) ---------- */
+
+    public function telegramOtp(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'phone' => 'required|string',
+            'purpose' => 'required|in:login,register,reset',
+            'email' => 'nullable|email',
+            'tax_id' => 'nullable|string|max:20',
+        ]);
+        $phone = normalize_phone($data['phone']);
+        if (! $phone) {
+            return response()->json(['ok' => false, 'message' => "Telefon raqam noto'g'ri. Format: 90 123 45 67"], 422);
+        }
+        if ($data['purpose'] === 'register' && ($fail = $this->registerPrecheck($phone, $data['email'] ?? null, $data['tax_id'] ?? null))) {
+            return $fail;
+        }
+        // Login/reset: raqam bazada bor-yo'qligini oshkor qilmaymiz — havola baribir qaytadi,
+        // hisob tekshiruvi botda (raqam egasi tasdiqlagandan keyin) bajariladi.
+
+        return response()->json($this->tgOtp->request($phone, $data['purpose'], $request->ip()));
+    }
+
+    public function telegramOtpStatus(Request $request, TelegramPoller $poller): JsonResponse
+    {
+        $request->validate(['token' => 'required|string|max:64']);
+        try {
+            $poller->touchPlatform(); // polling rejimida worker bo'lmasa ham /start ni qabul qilish uchun
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return response()->json($this->tgOtp->status($request->input('token')));
     }
 
     public function register(Request $request)

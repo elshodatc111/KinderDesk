@@ -12,44 +12,18 @@ class OtpService
     }
 
     /**
-     * Tasdiqlash kodini yuboradi.
+     * Tasdiqlash kodini SMS orqali yuboradi.
      *
      * @return array{ok: bool, message: string, wait?: int, dev_code?: string}
      */
     public function send(string $phone, string $purpose, ?string $ip = null): array
     {
-        $phone = normalize_phone($phone);
-        if (! $phone) {
-            return ['ok' => false, 'message' => "Telefon raqam noto'g'ri. Format: 90 123 45 67"];
+        $issued = $this->issue($phone, $purpose, $ip, 'sms');
+        if (! $issued['ok']) {
+            return $issued;
         }
-
-        $cfg = config('kinderdesk.otp');
-
-        $last = OtpCode::where('phone', $phone)->where('purpose', $purpose)->latest('id')->first();
-        if ($last && $last->created_at->gt(now()->subSeconds($cfg['resend_seconds']))) {
-            $wait = $cfg['resend_seconds'] - (int) $last->created_at->diffInSeconds(now());
-
-            return ['ok' => false, 'message' => __('Kodni qayta yuborish uchun :n soniya kuting', ['n' => $wait]), 'wait' => max(1, $wait)];
-        }
-
-        // Soatiga 6 tadan ko'p kod yubormaymiz (SMS xarajati va suiiste'moldan himoya)
-        $hourly = OtpCode::where('phone', $phone)->where('created_at', '>', now()->subHour())->count();
-        if ($hourly >= 6) {
-            return ['ok' => false, 'message' => "Juda ko'p urinish. Bir soatdan keyin qayta urinib ko'ring"];
-        }
-
-        $code = str_pad((string) random_int(0, 10 ** $cfg['length'] - 1), $cfg['length'], '0', STR_PAD_LEFT);
-
-        // Eski kodlarni bekor qilamiz
-        OtpCode::where('phone', $phone)->where('purpose', $purpose)->whereNull('used_at')->update(['used_at' => now()]);
-
-        OtpCode::create([
-            'phone' => $phone,
-            'purpose' => $purpose,
-            'code_hash' => $this->hash($phone, $purpose, $code),
-            'expires_at' => now()->addMinutes($cfg['ttl_minutes']),
-            'ip' => $ip,
-        ]);
+        $phone = $issued['phone'];
+        $code = $issued['code'];
 
         $log = $this->sms->sendPlatform($phone, 'otp', ['kod' => $code]);
         if ($log && $log->status === 'failed') {
@@ -63,6 +37,53 @@ class OtpService
         }
 
         return $result;
+    }
+
+    /**
+     * Yangi kod yaratadi va saqlaydi (yuborishni chaqiruvchi bajaradi: SMS yoki Telegram).
+     * Eski kodlar bekor qilinadi. Kanallar uchun umumiy tezlik cheklovi.
+     *
+     * @return array{ok: true, phone: string, code: string}|array{ok: false, message: string, wait?: int}
+     */
+    public function issue(string $phone, string $purpose, ?string $ip = null, string $channel = 'sms'): array
+    {
+        $phone = normalize_phone($phone);
+        if (! $phone) {
+            return ['ok' => false, 'message' => "Telefon raqam noto'g'ri. Format: 90 123 45 67"];
+        }
+
+        $cfg = config('kinderdesk.otp');
+
+        // Telegram — SMS kelmaganda zaxira kanal: SMS'dan keyin qisqa kutish yetarli
+        $gap = $channel === 'sms' ? $cfg['resend_seconds'] : ($cfg['telegram_after_seconds'] ?? 15);
+        $last = OtpCode::where('phone', $phone)->where('purpose', $purpose)->latest('id')->first();
+        if ($last && $last->created_at->gt(now()->subSeconds($gap))) {
+            $wait = $gap - (int) $last->created_at->diffInSeconds(now());
+
+            return ['ok' => false, 'message' => __('Kodni qayta yuborish uchun :n soniya kuting', ['n' => max(1, $wait)]), 'wait' => max(1, $wait)];
+        }
+
+        // Soatiga 6 tadan ko'p kod yubormaymiz (xarajat va suiiste'moldan himoya; SMS va Telegram birga hisoblanadi)
+        $hourly = OtpCode::where('phone', $phone)->where('created_at', '>', now()->subHour())->count();
+        if ($hourly >= 6) {
+            return ['ok' => false, 'message' => "Juda ko'p urinish. Bir soatdan keyin qayta urinib ko'ring"];
+        }
+
+        $code = str_pad((string) random_int(0, 10 ** $cfg['length'] - 1), $cfg['length'], '0', STR_PAD_LEFT);
+
+        // Eski kodlarni bekor qilamiz
+        OtpCode::where('phone', $phone)->where('purpose', $purpose)->whereNull('used_at')->update(['used_at' => now()]);
+
+        OtpCode::create([
+            'phone' => $phone,
+            'purpose' => $purpose,
+            'channel' => $channel,
+            'code_hash' => $this->hash($phone, $purpose, $code),
+            'expires_at' => now()->addMinutes($cfg['ttl_minutes']),
+            'ip' => $ip,
+        ]);
+
+        return ['ok' => true, 'phone' => $phone, 'code' => $code];
     }
 
     /** Kodni tekshiradi. To'g'ri bo'lsa kod ishlatilgan deb belgilanadi. */

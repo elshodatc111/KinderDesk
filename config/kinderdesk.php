@@ -32,6 +32,12 @@ return [
         'ttl_minutes' => 5,
         'max_attempts' => 5,
         'resend_seconds' => 60,
+        // SMS yuborilgach, Telegram orqali kod so'rash uchun kutish (soniya)
+        'telegram_after_seconds' => 15,
+        // Telegram so'rovi (start-havola) amal qilish muddati (daqiqa)
+        'telegram_request_minutes' => 10,
+        // Telefon <-> Telegram bog'lanishi shu kundan keyin qayta tasdiqlanadi (SIM almashgan bo'lishi mumkin)
+        'telegram_link_days' => 180,
         // SMS_DRIVER=log bo'lsa, kod storage/logs ichiga yoziladi (mahalliy sinov uchun)
         'allow_otp_login' => true,
     ],
