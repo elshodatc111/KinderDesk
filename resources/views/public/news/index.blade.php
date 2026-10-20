@@ -2,6 +2,9 @@
 @section('title', 'Yangiliklar')
 @section('meta_title', __("Yangiliklar va maslahatlar | KinderDesk"))
 @section('description', __("KinderDesk yangilanishlari, bog'cha boshqaruvi bo'yicha foydali maslahatlar va video yo'riqnomalar."))
+@push('head')
+<script type="application/ld+json">{!! \App\Support\Site\Seo::json(\App\Support\Site\Seo::breadcrumbs([['KinderDesk', route('home')], [__('Yangiliklar'), route('news.index')]])) !!}</script>
+@endpush
 @section('content')
 <section class="max-w-6xl mx-auto px-4 py-10 sm:py-14">
     <h1 class="font-display text-3xl sm:text-4xl font-semibold text-balance">Yangiliklar</h1>

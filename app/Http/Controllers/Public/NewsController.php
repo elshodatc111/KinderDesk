@@ -25,6 +25,26 @@ class NewsController extends Controller
         return view('public.news.index', ['posts' => $posts]);
     }
 
+    /** RSS: qidiruv tizimlari va o'quvchilar uchun so'nggi postlar. */
+    public function feed()
+    {
+        $lang = app()->getLocale();
+        $items = Post::visible()->orderByDesc('published_at')->limit(30)->get();
+        $esc = fn (string $v) => htmlspecialchars($v, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>',
+            '<title>KinderDesk — '.$esc(__('Yangiliklar')).'</title>', '<link>'.$esc(route('news.index')).'</link>',
+            '<description>'.$esc(__("KinderDesk yangilanishlari, bog'cha boshqaruvi bo'yicha foydali maslahatlar va video yo'riqnomalar.")).'</description>',
+            '<language>'.$lang.'</language>', '<atom:link href="'.$esc(route('news.feed')).'" rel="self" type="application/rss+xml"/>'];
+        foreach ($items as $p) {
+            $xml[] = '<item><title>'.$esc($p->title()).'</title><link>'.$esc($p->url()).'</link><guid isPermaLink="true">'.$esc($p->url()).'</guid>'
+                .($p->published_at ? '<pubDate>'.$p->published_at->toRfc2822String().'</pubDate>' : '')
+                .'<description>'.$esc($p->excerpt(300)).'</description></item>';
+        }
+        $xml[] = '</channel></rss>';
+
+        return response(implode("\n", $xml)."\n", 200, ['Content-Type' => 'application/rss+xml; charset=UTF-8', 'Cache-Control' => 'public, max-age=900']);
+    }
+
     public function show(Request $request, string $slug)
     {
         $post = $this->find($request, $slug);

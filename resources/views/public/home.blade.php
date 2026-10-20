@@ -16,6 +16,7 @@
                 'inLanguage' => ['uz', 'ru'],
                 'description' => __("Xususiy bog'chalar uchun boshqaruv dasturi: bolalar davomati, to'lovlar, qarzdorlar, xodimlar ish haqi va ota-onalarga Telegram xabarlari. 14 kun bepul sinov."),
                 'image' => asset('og-uz.png'),
+                'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'UZS', 'description' => $trialDays.' kunlik bepul sinov', 'url' => route('register'), 'availability' => 'https://schema.org/InStock'],
                 'publisher' => ['@id' => route('home').'#organization'],
             ],
             count($faq) ? [

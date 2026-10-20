@@ -51,6 +51,12 @@ class Seo
         return asset($file);
     }
 
+    /** Ijtimoiy tarmoq rasmi o'lchami (og-uz.png / og-ru.png: 1200x630). */
+    public static function ogImageIsDefault(string $image): bool
+    {
+        return in_array($image, [asset('og-uz.png'), asset('og-ru.png')], true);
+    }
+
     /** Sayt bo'ylab Organization + WebSite (JSON-LD graph). */
     public static function siteGraph(): array
     {

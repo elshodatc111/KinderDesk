@@ -35,9 +35,11 @@ class SeoController extends Controller
 
     private function build(): string
     {
-        $pages = [[route('home'), null], [route('news.index'), null]];
+        // Statik sahifalar uchun lastmod: tegishli shablon o'zgargan vaqt
+        $mtime = fn (string $view) => is_file($f = resource_path('views/'.$view)) ? \Illuminate\Support\Carbon::createFromTimestamp(filemtime($f)) : null;
+        $pages = [[route('home'), $mtime('public/home.blade.php')], [route('news.index'), null]];
         foreach (array_keys(Legal::PAGES) as $page) {
-            $pages[] = [route('legal', $page), null];
+            $pages[] = [route('legal', $page), $mtime('public/legal.blade.php')];
         }
         try {
             foreach (Post::visible()->orderByDesc('published_at')->get(['slug', 'published_at', 'edited_at']) as $p) {

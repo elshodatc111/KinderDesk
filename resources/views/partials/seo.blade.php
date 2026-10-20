@@ -22,12 +22,22 @@
 <meta property="og:description" content="{{ $seoDesc }}">
 <meta property="og:url" content="{{ Seo::urlFor($seoLocale) }}">
 <meta property="og:image" content="{{ $seoImage }}">
+<meta property="og:image:alt" content="{{ $seoTitle }}">
+@if (Seo::ogImageIsDefault($seoImage))
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+@endif
 <meta property="og:locale" content="{{ Seo::LOCALES[$seoLocale] ?? 'uz_UZ' }}">
 @foreach (Seo::LOCALES as $l => $ogl)@if ($l !== $seoLocale)<meta property="og:locale:alternate" content="{{ $ogl }}">@endif @endforeach
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ $seoTitle }}">
 <meta name="twitter:description" content="{{ $seoDesc }}">
 <meta name="twitter:image" content="{{ $seoImage }}">
+<meta name="twitter:image:alt" content="{{ $seoTitle }}">
+<link rel="sitemap" type="application/xml" href="{{ route('seo.sitemap') }}">
+@if (request()->routeIs('news.*'))
+<link rel="alternate" type="application/rss+xml" title="KinderDesk — {{ __('Yangiliklar') }}" href="{{ route('news.feed') }}">
+@endif
 <script type="application/ld+json">{!! Seo::json(Seo::siteGraph()) !!}</script>
 @else
 <meta name="robots" content="noindex,nofollow">

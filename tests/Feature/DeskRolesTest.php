@@ -104,8 +104,14 @@ class DeskRolesTest extends TestCase
         $this->actingAs($owner)->get('/admin/tizim')->assertStatus(403);
     }
 
-    public function test_russian_is_default_and_switchable(): void
+    public function test_language_is_negotiated_and_switchable(): void
     {
+        // Brauzer tili ruscha bo'lsa — ruscha; til aniqlanmasa — o'zbekcha (asosiy auditoriya)
+        $this->withHeaders(['Accept-Language' => 'ru-RU,ru;q=0.9'])->get('/kirish')->assertSee('Войти');
+        $this->flushSession();
+        $this->withHeaders(['Accept-Language' => '']);
+        $this->get('/kirish')->assertSee('Kirish');
+        $this->get('/til/ru');
         $this->get('/kirish')->assertSee('Войти');
         $this->get('/til/uz');
         $this->get('/kirish')->assertSee('Kirish');
